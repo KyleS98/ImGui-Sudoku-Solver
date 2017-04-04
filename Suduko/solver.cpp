@@ -1,72 +1,9 @@
-﻿// Suduko.cpp : Defines the entry point for the console application.
-//
+#include "solver.hpp"
 
-#include "stdafx.h"
-
-
-
-
-
-class Solver
+bool Solver::solve(int p[9][9], int(&final)[9][9])
 {
-public:
-	bool solve(int p[9][9], int (&final)[9][9]);
-	bool validateSolution(int p[9][9]);
-	void draw(int final[9][9]);
-protected:
-	bool findEmptySquare(int p[9][9], int &row, int &col);
-	bool canBePlaced(const int numToCheck, const int row, const int col, int p[9][9]);
-	bool checkCross(const int numToCheck, const int row, const int col, int p[9][9]);
-	bool checkCube(const int numToCheck, const int row, const int col, int p[9][9]);
-	int getCubeRegionNumber(const int row, const int col);
-	std::vector<int> getCubeValues(const int cubeRegionNumber, int p[9][9]);
-};
 
 
-
-int main()
-{
-	Solver* s = new Solver;
-	int testPuzzle[9][9] =
-	{
-		{0,7,0, 0,8,0, 3,0,0},
-		{2,0,0, 0,0,0, 0,0,8},
-		{3,0,0, 9,0,0, 0,7,0},
-
-		{0,0,0, 0,9,0, 0,0,0},
-		{0,0,5, 0,2,0, 0,4,7},
-		{0,8,0, 0,0,0, 0,6,2},
-
-		{0,0,2, 0,0,6, 0,8,0},
-		{0,4,7, 0,3,9, 0,0,6},
-		{0,5,0, 2,0,0, 4,0,0}
-	};
-
-	int output[9][9];
-
-
-
-
-
-	std::vector<int> final;
-	std::cout << "Computing solution...";
-	if (s->solve(testPuzzle, output))
-	{
-		system("cls");
-		if (s->validateSolution(output))
-		{
-			s->draw(output);
-			std::cout << "\nSolution validated...";
-		}
-	}
-
-
-	std::cin.get();
-}
-
-
-bool Solver::solve(int p[9][9], int (&final)[9][9])
-{
 
 	int row, col;
 	if (!findEmptySquare(p, row, col))
@@ -77,14 +14,14 @@ bool Solver::solve(int p[9][9], int (&final)[9][9])
 
 	for (int a = 1; a <= 9; a++)
 	{
-		if(canBePlaced(a, row, col, p))
+		if (canBePlaced(a, row, col, p))
 		{
 			p[row][col] = a;
 			if (solve(p, final))
 			{
-				for(int x = 0; x < 9; x++)
+				for (int x = 0; x < 9; x++)
 				{
-					for(int y = 0; y < 9; y++)
+					for (int y = 0; y < 9; y++)
 					{
 						final[x][y] = p[x][y];
 					}
@@ -97,9 +34,17 @@ bool Solver::solve(int p[9][9], int (&final)[9][9])
 	return false;
 }
 
-void Solver::draw(int final[9][9])
+void Solver::draw(int final[9][9], int original[9][9])
 {
-	std::cout << "SOLUTION:" << std::endl << " -------------------------------------" << std::endl;
+	HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
+	WORD oldColor;
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
+	GetConsoleScreenBufferInfo(h, &csbi);
+	oldColor = csbi.wAttributes;
+
+
+	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_BLUE | FOREGROUND_INTENSITY | BACKGROUND_BLUE | BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_INTENSITY);
+	std::cout << std::endl << " ------------------------------------- " << std::endl;
 
 	for (int a = 0; a < 9; a++)
 	{
@@ -107,13 +52,14 @@ void Solver::draw(int final[9][9])
 		for (int b = 0; b < 9; b++)
 		{
 			int countB = b + 1;
+			std::cout << final[a][b];
+			std::cout << " | ";
 
-			std::cout << final[a][b] << " | ";
-
-			if (countB % 9 == 0) std::cout << std::endl << " -------------------------------------" << std::endl;
+			if (countB % 9 == 0) std::cout << std::endl << " ------------------------------------- " << std::endl;
 		}
 	}
 
+	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), oldColor);
 }
 
 bool Solver::findEmptySquare(int p[9][9], int &row, int &col)
@@ -122,7 +68,7 @@ bool Solver::findEmptySquare(int p[9][9], int &row, int &col)
 	{
 		for (int b = 0; b < 9; b++)
 		{
-			if(p[a][b] == 0)
+			if (p[a][b] == 0)
 			{
 				row = a;
 				col = b;
@@ -160,7 +106,7 @@ bool Solver::validateSolution(int p[9][9])
 			{
 				if (!checkCube(p[a][b], a, b, p) || !checkCross(p[a][b], a, b, p))
 					return false;
-				
+
 			}
 		}
 	}
@@ -204,7 +150,7 @@ bool Solver::checkCube(const int numToCheck, const int row, const int col, int p
 	int region = getCubeRegionNumber(row, col);
 	std::vector<int> vals = getCubeValues(region, p);
 
-	for(int a = 0; a < vals.size(); a++)
+	for (int a = 0; a < vals.size(); a++)
 	{
 		if (numToCheck == vals.at(a) && p[row][col] != numToCheck)
 			return false;
@@ -271,13 +217,13 @@ int Solver::getCubeRegionNumber(const int row, const int col)
 			return 9;
 		}
 	}
-	
+
 }
 
 std::vector<int> Solver::getCubeValues(const int cubeRegionNumber, int p[9][9])
 {
 	std::vector<int> values;
-	
+
 	//top third
 
 	if (cubeRegionNumber == 1)
@@ -350,7 +296,7 @@ std::vector<int> Solver::getCubeValues(const int cubeRegionNumber, int p[9][9])
 		}
 		return values;
 	}
-	
+
 
 	//bottom third
 
@@ -387,7 +333,7 @@ std::vector<int> Solver::getCubeValues(const int cubeRegionNumber, int p[9][9])
 		}
 		return values;
 	}
-	
+
 
 	throw std::runtime_error("You done fucked up nigga");
 }
