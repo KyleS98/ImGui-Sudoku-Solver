@@ -20,12 +20,8 @@ int main()
 	};
 
 	int originalCpy[9][9];
-	memcpy(originalCpy, puzzle, sizeof(puzzle));
-
 	int output[9][9];
-
-
-
+	memcpy(originalCpy, puzzle, sizeof(puzzle));
 
 
 	std::vector<int> final;

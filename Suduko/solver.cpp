@@ -44,19 +44,30 @@ void Solver::draw(int final[9][9], int original[9][9])
 
 
 	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_BLUE | FOREGROUND_INTENSITY | BACKGROUND_BLUE | BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_INTENSITY);
-	std::cout << std::endl << " ------------------------------------- " << std::endl;
+	std::cout << std::endl << " ------------------------------- " << std::endl;
 
 	for (int a = 0; a < 9; a++)
 	{
+		int countA = a + 1;
 		std::cout << " | ";
 		for (int b = 0; b < 9; b++)
 		{
 			int countB = b + 1;
 			std::cout << final[a][b];
-			std::cout << " | ";
 
-			if (countB % 9 == 0) std::cout << std::endl << " ------------------------------------- " << std::endl;
+			if ((countB % 3 == 0) && (countB == 9))
+			{
+				std::cout << " | ";
+				std::cout << std::endl;
+			}
+			else if (countB % 3 == 0)
+				std::cout << " | ";
+			else
+			{
+				std::cout << "  ";
+			}
 		}
+		if (countA % 3 == 0) std::cout << " ------------------------------- " << std::endl;
 	}
 
 	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), oldColor);
