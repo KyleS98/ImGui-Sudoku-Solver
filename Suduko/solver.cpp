@@ -1,15 +1,14 @@
 #include "solver.hpp"
 
-bool Solver::solve(int p[9][9], int(&final)[9][9])
+bool Solver::solve(int p[9][9], int final[9][9])
 {
 
 
 
 	int row, col;
-	if (!findEmptySquare(p, row, col))
+	if (!findEmptySquare(p, row, col) && validateSolution(p))
 		return true;
-	if (validateSolution(p))
-		return true;
+
 
 
 	for (int a = 1; a <= 9; a++)
@@ -103,8 +102,7 @@ bool Solver::canBePlaced(const int numToCheck, const int row, const int col, int
 
 bool Solver::validateSolution(int p[9][9])
 {
-	//use this to see if a completed (filled-in) puzzle is valid
-	//there is another function to see if a single number is possibly valid with given information
+	//use this to see if a completed, filled-in, puzzle is valid
 
 
 	for (int a = 0; a < 9; a++)
@@ -115,7 +113,7 @@ bool Solver::validateSolution(int p[9][9])
 				return false;
 			else
 			{
-				if (!checkCube(p[a][b], a, b, p) || !checkCross(p[a][b], a, b, p))
+				if (!checkCube(p[a][b], a, b, p) || !checkCross(p[a][b], a, b, p) || !checkSum(a, b, p))
 					return false;
 
 			}
@@ -169,6 +167,30 @@ bool Solver::checkCube(const int numToCheck, const int row, const int col, int p
 
 	return true;
 }
+
+
+bool Solver::checkSum(const int row, const int col, int final[9][9])
+{
+	//check row sums
+	int temp = 0;
+	for(int a = 0; a < 9; a++)
+	{
+		temp += final[a][0];
+	}
+	if (temp != 45) return false;
+	
+	//check cols
+	temp = 0;
+	for (int a = 0; a < 9; a++)
+	{
+		temp += final[0][a];
+	}
+	if (temp != 45) return false;
+
+	return true;
+}
+
+
 
 int Solver::getCubeRegionNumber(const int row, const int col)
 {
@@ -347,4 +369,23 @@ std::vector<int> Solver::getCubeValues(const int cubeRegionNumber, int p[9][9])
 
 
 	throw std::runtime_error("You done fucked up nigga");
+}
+
+
+void openConsole()
+{
+	if (FreeConsole())
+	{
+		if (!AllocConsole())
+			return;
+	}
+	else if (!AllocConsole())
+	{
+		return;
+	}
+
+	SetConsoleTitleA("Suduko Solver");
+
+	FILE* console = nullptr;
+	freopen_s(&console, "CONOUT$", "w", stdout);
 }
