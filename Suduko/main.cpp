@@ -1,72 +1,87 @@
-#include "solver.hpp"
-#include "imgui/imgui.h"
-#include "imgui/imgui_impl_dx9.h"
-#include "imgui/imconfig.h"
-#include <d3d9.h>
-#include <dinput.h>
-#include <tchar.h>
-#include <process.h>
-#include <xoleHlp.h>
-#include <minwinbase.h>
-#include "imgui/imgui_internal.h"
-#include <iterator>
-#pragma comment (lib, "d3d9.lib")
-
-#define DIRECTINPUT_VERSION 0x0800
-
-
-
-static LPDIRECT3DDEVICE9        g_pd3dDevice = NULL;
-static D3DPRESENT_PARAMETERS    g_d3dpp;
-
-extern LRESULT ImGui_ImplDX9_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-
+#include "main.hpp"
 
 
 
 int main(int, char**, HANDLE console)
 {
 	bool consoleOnly = false;
-
-	Solver* s = new Solver;
 	int puzzle[9][9];
 	int originalCpy[9][9];
-	int output[9][9];
+	int output[9][9];                          
+	int debug[9][9] =
+	{
+		{ 5,7,0, 0,8,0, 0,0,0 },
+		{ 2,2,4, 0,0,0, 0,0,8 }, 
+		{ 3,0,0, 9,0,2, 0,7,0 },
 
+		{ 0,0,0, 0,9,0, 0,0,0 },
+		{ 0,0,5, 0,2,0, 0,4,7 },
+		{ 0,8,0, 0,0,0, 0,6,2 },
+
+		{ 0,3,2, 5,0,6, 0,8,0 },
+		{ 0,4,7, 0,0,3, 0,0,6 },
+		{ 0,5,0, 2,0,0, 1,0,0 }
+	};
 	ZeroMemory(output, sizeof(int) * 81);
 	ZeroMemory(puzzle, sizeof(int) * 81);
-	ZeroMemory(output, sizeof(int) * 81);
+	ZeroMemory(originalCpy, sizeof(int) * 81);
 
 	
+
+	Solver* s = new Solver;
+	if (GetAsyncKeyState(VK_SPACE))
+	{
+		memcpy(puzzle, debug, sizeof(puzzle));
+	}
+
+
+
+	WORD oldColor;
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
+	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+	oldColor = csbi.wAttributes;
+
+
+	
+	
+
+
 	if(consoleOnly)
 	{
-		WORD oldColor;
-		CONSOLE_SCREEN_BUFFER_INFO csbi;
-		GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
-		oldColor = csbi.wAttributes;
-
 		memcpy(originalCpy, puzzle, sizeof(puzzle));
 
-		std::cout << "Computing solution...";
-		if (s->solve(originalCpy, output))
+		if (s->precheckInput(originalCpy))
 		{
-			if (s->validateSolution(output))
+			std::cout << "Computing solution...";
+			if (s->solve(originalCpy, output))
+			{
+				if (s->validateSolution(output))
+				{
+					system("cls");
+					s->draw(output, originalCpy);
+					SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), BACKGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_INTENSITY);
+					std::cout << "\nSolution validated!";
+					SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), oldColor);
+				}
+			}
+			else
 			{
 				system("cls");
-				s->draw(output, originalCpy);
-				SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), BACKGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_INTENSITY);
-				std::cout << "\nSolution validated!";
+				SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), BACKGROUND_RED | FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_INTENSITY);
+				std::cout << "\nUnable to generate solution. The puzzle is likely unsolvable via brute-force.";
 				SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), oldColor);
 			}
 		}
 		else
 		{
+			Beep(600, 500);
 			system("cls");
 			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), BACKGROUND_RED | FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_INTENSITY);
-			std::cout << "\nUnable to generate solution. The puzzle is likely unsolvable.";
+			std::cout << "\nError: Input is in invalid; There is a duplicate number in a row/col/box.\n\n You may close this window...";
 			SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), oldColor);
+			std::cin.get();
 		}
+
 		std::cin.get();
 	}
 	
@@ -78,6 +93,8 @@ int main(int, char**, HANDLE console)
 	if (!consoleOnly)
 	{
 		FreeConsole();
+		// Manually declaring every int used and initializing to zero. Use of arrays or vectors caused bugs.
+
 		int a0, a1, a2, a3, a4, a5, a6, a7, a8,
 			b0, b1, b2, b3, b4, b5, b6, b7, b8,
 			c0, c1, c2, c3, c4, c5, c6, c7, c8,
@@ -90,17 +107,17 @@ int main(int, char**, HANDLE console)
 			h0, h1, h2, h3, h4, h5, h6, h7, h8,
 			i0, i1, i2, i3, i4, i5, i6, i7, i8;
 
-		a0 = a1 = a2 = a3 = a4 = a5 = a6 = a7 = a8 =
-			b0 = b1 = b2 = b3 = b4 = b5 = b6 = b7 = b8 =
-			c0 = c1 = c2 = c3 = c4 = c5 = c6 = c7 = c8 =
-
-			d0 = d1 = d2 = d3 = d4 = d5 = d6 = d7 = d8 =
-			e0 = e1 = e2 = e3 = e4 = e5 = e6 = e7 = e8 =
-			f0 = f1 = f2 = f3 = f4 = f5 = f6 = f7 = f8 =
-
-			g0 = g1 = g2 = g3 = g4 = g5 = g6 = g7 = g8 =
-			h0 = h1 = h2 = h3 = h4 = h5 = h6 = h7 = h8 =
-			i0 = i1 = i2 = i3 = i4 = i5 = i6 = i7 = i8 = 0;
+		a0 = a1 = a2 = a3 = a4 = a5 = a6 = a7 = a8 = 0;
+		b0 = b1 = b2 = b3 = b4 = b5 = b6 = b7 = b8 = 0;
+		c0 = c1 = c2 = c3 = c4 = c5 = c6 = c7 = c8 = 0;
+		d0 = d1 = d2 = d3 = d4 = d5 = d6 = d7 = d8 = 0;
+		e0 = e1 = e2 = e3 = e4 = e5 = e6 = e7 = e8 = 0;
+		f0 = f1 = f2 = f3 = f4 = f5 = f6 = f7 = f8 = 0;
+		g0 = g1 = g2 = g3 = g4 = g5 = g6 = g7 = g8 = 0;
+		h0 = h1 = h2 = h3 = h4 = h5 = h6 = h7 = h8 = 0;
+		i0 = i1 = i2 = i3 = i4 = i5 = i6 = i7 = i8 = 0;
+		
+		
 
 		int Oa0, Oa1, Oa2, Oa3, Oa4, Oa5, Oa6, Oa7, Oa8,
 			Ob0, Ob1, Ob2, Ob3, Ob4, Ob5, Ob6, Ob7, Ob8,
@@ -114,19 +131,18 @@ int main(int, char**, HANDLE console)
 			Oh0, Oh1, Oh2, Oh3, Oh4, Oh5, Oh6, Oh7, Oh8,
 			Oi0, Oi1, Oi2, Oi3, Oi4, Oi5, Oi6, Oi7, Oi8;
 
-		Oa0 = Oa1 = Oa2 = Oa3 = Oa4 = Oa5 = Oa6 = Oa7 = Oa8 =
-			Ob0 = Ob1 = Ob2 = Ob3 = Ob4 = Ob5 = Ob6 = Ob7 = Ob8 =
-			Oc0 = Oc1 = Oc2 = Oc3 = Oc4 = Oc5 = Oc6 = Oc7 = Oc8 =
+		Oa0 = Oa1 = Oa2 = Oa3 = Oa4 = Oa5 = Oa6 = Oa7 = Oa8 = 0;
+		Ob0 = Ob1 = Ob2 = Ob3 = Ob4 = Ob5 = Ob6 = Ob7 = Ob8 = 0;
+		Oc0 = Oc1 = Oc2 = Oc3 = Oc4 = Oc5 = Oc6 = Oc7 = Oc8 = 0;
 
-			Od0 = Od1 = Od2 = Od3 = Od4 = Od5 = Od6 = Od7 = Od8 =
-			Oe0 = Oe1 = Oe2 = Oe3 = Oe4 = Oe5 = Oe6 = Oe7 = Oe8 =
-			Of0 = Of1 = Of2 = Of3 = Of4 = Of5 = Of6 = Of7 = Of8 =
+		Od0 = Od1 = Od2 = Od3 = Od4 = Od5 = Od6 = Od7 = Od8 = 0;
+		Oe0 = Oe1 = Oe2 = Oe3 = Oe4 = Oe5 = Oe6 = Oe7 = Oe8 = 0;
+		Of0 = Of1 = Of2 = Of3 = Of4 = Of5 = Of6 = Of7 = Of8 = 0;
 
-			Og0 = Og1 = Og2 = Og3 = Og4 = Og5 = Og6 = Og7 = Og8 =
-			Oh0 = Oh1 = Oh2 = Oh3 = Oh4 = Oh5 = Oh6 = Oh7 = Oh8 =
-			Oi0 = Oi1 = Oi2 = Oi3 = Oi4 = Oi5 = Oi6 = Oi7 = Oi8 = 0;
-
-
+		Og0 = Og1 = Og2 = Og3 = Og4 = Og5 = Og6 = Og7 = Og8 = 0;
+		Oh0 = Oh1 = Oh2 = Oh3 = Oh4 = Oh5 = Oh6 = Oh7 = Oh8 = 0;
+		Oi0 = Oi1 = Oi2 = Oi3 = Oi4 = Oi5 = Oi6 = Oi7 = Oi8 = 0;
+		
 
 		// Create application window
 		WNDCLASSEX wc = { sizeof(WNDCLASSEX), CS_CLASSDC, WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, LoadCursor(NULL, IDC_ARROW), NULL, NULL, _T("SudukoGUI"), NULL };
@@ -162,7 +178,7 @@ int main(int, char**, HANDLE console)
 		ImVec4 clear_col = ImColor(114, 144, 154);
 
 		//Set theme
-		ImGuiStyle * style = &ImGui::GetStyle();
+		ImGuiStyle* style = &ImGui::GetStyle();
 
 		style->WindowPadding = ImVec2(10, 10);
 		style->WindowRounding = 5.0f;
@@ -177,7 +193,7 @@ int main(int, char**, HANDLE console)
 		style->GrabRounding = 3.0f;
 		style->Colors[ImGuiCol_Text] = ImVec4(0.80f, 0.80f, 0.83f, 1.00f);
 		style->Colors[ImGuiCol_TextDisabled] = ImVec4(0.24f, 0.23f, 0.29f, 1.00f);
-		style->Colors[ImGuiCol_WindowBg] = ImVec4(0.06f, 0.05f, 0.07f, 1.00f);
+		style->Colors[ImGuiCol_WindowBg] = ImVec4(0.1f, 0.4f, 0.6f, 1.00f);
 		style->Colors[ImGuiCol_ChildWindowBg] = ImVec4(0.0f, 0.07f, 0.09f, 1.00f);
 		style->Colors[ImGuiCol_PopupBg] = ImVec4(0.07f, 0.07f, 0.09f, 1.00f);
 		style->Colors[ImGuiCol_Border] = ImVec4(0.80f, 0.80f, 0.83f, 0.88f);
@@ -198,7 +214,7 @@ int main(int, char**, HANDLE console)
 		style->Colors[ImGuiCol_SliderGrab] = ImVec4(0.80f, 0.80f, 0.83f, 0.31f);
 		style->Colors[ImGuiCol_SliderGrabActive] = ImVec4(0.06f, 0.05f, 0.07f, 1.00f);
 		style->Colors[ImGuiCol_Button] = ImVec4(0.10f, 0.09f, 0.12f, 1.00f);
-		style->Colors[ImGuiCol_ButtonHovered] = ImVec4(0.24f, 0.23f, 0.29f, 1.00f);
+		style->Colors[ImGuiCol_ButtonHovered] = ImVec4(0.2f, 0.4f, 0.2f, 1.00f);
 		style->Colors[ImGuiCol_ButtonActive] = ImVec4(0.56f, 0.56f, 0.58f, 1.00f);
 
 
@@ -565,7 +581,7 @@ int main(int, char**, HANDLE console)
 						puzzle[6][5] = g5;
 					}ImGui::SameLine(); ImGui::Text("|");
 					ImGui::SameLine();  ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.0277777f);
-					if (ImGui::InputInt("##g6", &f6, 0, 0))
+					if (ImGui::InputInt("##g6", &g6, 0, 0))
 					{
 						puzzle[6][6] = g6;
 					}
@@ -1133,17 +1149,30 @@ int main(int, char**, HANDLE console)
 					ImGui::Text("------------------------------------------------------------------");
 				}
 
-				//Go Back to no colums
+				//Go Back to no columns
 				ImGui::Columns(1);
-				if (ImGui::Button("Solve", ImVec2(1170, 25)))
+				if (ImGui::Button("Solve", ImVec2(1165, 25)))
 				{
 					memcpy(originalCpy, puzzle, sizeof(puzzle));
-					s->solve(originalCpy, output);
+					if (s->precheckInput(originalCpy))
+					{
+						if (!s->solve(originalCpy, output))
+						{
+							MessageBox(NULL, L"Error: This puzzle is impossible to solve via brute-force.", L"Puzzle Not Solvable", MB_ICONWARNING);
+						}
+					}
+					else
+					{
+						MessageBox(NULL, L"Error: Input puzzle is in invalid. There is a duplicate number in a row/col/box.", L"Invalid Input", MB_ICONWARNING);
+					}
+					
+
 				}
-				if (ImGui::Button("Output to console", ImVec2(1170, 25)))
+				if (ImGui::Button("Output to console", ImVec2(1165, 25)))
 				{
 					openConsole();
 					s->draw(output, puzzle);
+					FreeConsole();
 				}
 
 			}
