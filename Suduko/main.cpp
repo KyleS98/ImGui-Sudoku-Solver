@@ -2,7 +2,7 @@
 
 
 
-int main(int, char**, HANDLE console)
+int main(int, char**)
 {
 	Solver* s = new Solver;
 
@@ -68,7 +68,7 @@ int main(int, char**, HANDLE console)
 	{
 		FreeConsole();
 
-		// Manually declaring every int used and initializing to zero. Use of arrays or vectors caused bugs.
+		// Yes. I know.
 		int a0, a1, a2, a3, a4, a5, a6, a7, a8,
 			b0, b1, b2, b3, b4, b5, b6, b7, b8,
 			c0, c1, c2, c3, c4, c5, c6, c7, c8,
