@@ -1,10 +1,8 @@
 #include "solver.hpp"
 
+
 bool Solver::solve(int p[9][9], int final[9][9])
 {
-
-
-
 	int row, col;
 	if (!findEmptySquare(p, row, col) && validateSolution(p))
 		return true;
@@ -93,12 +91,13 @@ bool Solver::canBePlaced(const int numToCheck, const int row, const int col, int
 {
 	//use this to see if a number can be placed not if a puzzle is valid
 
-	if (!p[row][col] == 0)
+	if (p[row][col] != 0)
 		return false;
 	else if (checkCross(numToCheck, row, col, p) && checkCube(numToCheck, row, col, p))
 		return true;
 	else return false;
 }
+
 
 bool Solver::validateSolution(int p[9][9])
 {
@@ -189,7 +188,6 @@ bool Solver::checkSum(const int row, const int col, int final[9][9])
 
 	return true;
 }
-
 
 
 int Solver::getCubeRegionNumber(const int row, const int col)
@@ -371,6 +369,97 @@ std::vector<int> Solver::getCubeValues(const int cubeRegionNumber, int p[9][9])
 	throw std::runtime_error("You done fucked up nigga");
 }
 
+
+bool Solver::precheckInput(int in[9][9])
+{
+	for (int a = 0; a < 9; a++)
+	{
+		for (int b = 0; b < 9; b++)
+		{
+			if (in[a][b] == 0)
+				continue;
+			if (!preCheckCube(a, b, in))
+				return false;
+			if (!preCheckCross(a, b, in))
+				return false;
+
+		}
+	}
+	return true;
+}
+
+
+bool Solver::preCheckCube(const int row, const int col, int p[9][9])
+{
+	int region = getCubeRegionNumber(row, col);
+	std::vector<int> vec = getCubeValues(region, p);
+
+	for (int x = 0; x < 9; x++)
+	{
+		for (int y = 0; y < 9; y++)
+		{
+			if (x == y) continue;
+			if ((vec.at(x) == 0) || (vec.at(y) == 0)) continue;
+			else
+			{
+				if (vec.at(x) == vec.at(y))
+					return false;
+			}
+		}
+	}
+	return true;
+}
+
+bool Solver::preCheckCross(const int row, const int col, int p[9][9])
+{
+	std::vector<int> fullCol;
+	std::vector<int> fullRow;
+	//dump col
+	for (int a = 0; a < 9; a++)
+	{
+		fullCol.push_back(p[a][col]);
+	}
+	//dump row
+	for (int a = 0; a < 9; a++)
+	{
+		// This check prevents placing the same start number in the vector by substituting it with a 0 the second time
+		fullRow.push_back(p[row][a]);
+
+	}
+
+	for (int a = 0; a < 9; a++)
+	{
+		for (int b = 0; b < 9; b++)
+		{
+			if ((fullRow.at(a) != 0) && (fullRow.at(b) != 0) && a != b)
+			{
+				if (fullRow.at(a) == fullRow.at(b))
+				{
+					return false;
+
+				}
+			}
+		}
+	}
+	for (int a = 0; a < 9; a++)
+	{
+		for (int b = 0; b < 9; b++)
+		{
+			if ((fullCol.at(a) != 0) && (fullCol.at(b) != 0) && a != b)
+			{
+				if (fullCol.at(a) == fullCol.at(b))
+				{
+					return false;
+
+				}
+			}
+		}
+	}
+
+	return true;
+
+
+}
 
 void openConsole()
 {
