@@ -378,6 +378,8 @@ bool Solver::precheckInput(int in[9][9])
 		{
 			if (in[a][b] == 0)
 				continue;
+			if (in[a][b] < 0 || in[a][b] > 9)
+				return false;
 			if (!preCheckCube(a, b, in))
 				return false;
 			if (!preCheckCross(a, b, in))
@@ -400,11 +402,9 @@ bool Solver::preCheckCube(const int row, const int col, int p[9][9])
 		{
 			if (x == y) continue;
 			if ((vec.at(x) == 0) || (vec.at(y) == 0)) continue;
-			else
-			{
-				if (vec.at(x) == vec.at(y))
-					return false;
-			}
+			else if (vec.at(x) == vec.at(y))
+				return false;
+		
 		}
 	}
 	return true;
@@ -414,6 +414,7 @@ bool Solver::preCheckCross(const int row, const int col, int p[9][9])
 {
 	std::vector<int> fullCol;
 	std::vector<int> fullRow;
+
 	//dump col
 	for (int a = 0; a < 9; a++)
 	{
@@ -422,9 +423,7 @@ bool Solver::preCheckCross(const int row, const int col, int p[9][9])
 	//dump row
 	for (int a = 0; a < 9; a++)
 	{
-		// This check prevents placing the same start number in the vector by substituting it with a 0 the second time
 		fullRow.push_back(p[row][a]);
-
 	}
 
 	for (int a = 0; a < 9; a++)
