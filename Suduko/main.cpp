@@ -323,6 +323,7 @@ int main(int, char**)
 					}ImGui::SameLine(); ImGui::Text("|");
 
 					//// new line
+
 					ImGui::Text("|"); ImGui::SameLine();
 					ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.0277777f);
 					if (ImGui::InputInt("##c0", &c0, 0, 0))
@@ -422,6 +423,7 @@ int main(int, char**)
 					}ImGui::SameLine(); ImGui::Text("|");
 
 					//// new line
+
 					ImGui::Text("|"); ImGui::SameLine();
 					ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.0277777f);
 					if (ImGui::InputInt("##e0", &e0, 0, 0))
@@ -470,6 +472,7 @@ int main(int, char**)
 					}ImGui::SameLine(); ImGui::Text("|");
 
 					//// new line
+
 					ImGui::Text("|"); ImGui::SameLine();
 					ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.0277777f);
 					if (ImGui::InputInt("##f0", &f0, 0, 0))
@@ -518,6 +521,7 @@ int main(int, char**)
 					}ImGui::SameLine(); ImGui::Text("|");
 
 					//// new line
+
 					ImGui::Text("------------------------------------------------------------------");
 					ImGui::Text("|"); ImGui::SameLine();
 					ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.0277777f);
@@ -567,6 +571,7 @@ int main(int, char**)
 					}ImGui::SameLine(); ImGui::Text("|");
 
 					//// new line
+
 					ImGui::Text("|"); ImGui::SameLine();
 					ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.0277777f);
 					if (ImGui::InputInt("##h0", &h0, 0, 0))
@@ -616,6 +621,7 @@ int main(int, char**)
 
 
 					//// new line
+
 					ImGui::Text("|"); ImGui::SameLine();
 					ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.0277777f);
 					if (ImGui::InputInt("##i0", &i0, 0, 0))
@@ -970,6 +976,7 @@ int main(int, char**)
 					}ImGui::SameLine(); ImGui::Text("|");
 
 					//// new line
+
 					ImGui::Text("------------------------------------------------------------------");
 					ImGui::Text("|"); ImGui::SameLine();
 					ImGui::PushItemWidth(ImGui::GetWindowWidth() * 0.0277777f);
@@ -1124,20 +1131,29 @@ int main(int, char**)
 				if (ImGui::Button("Solve", ImVec2(1165, 25)))
 				{
 					memcpy(originalCpy, puzzle, sizeof(puzzle));
-					if (s->precheckInput(originalCpy))
+
+					int status = s->precheckInput(originalCpy);
+					if (status == 1)
 					{
 						if (!s->solve(originalCpy, output))
 						{
-							MessageBox(NULL, L"Error: This puzzle is impossible to solve via brute-force.", L"Unsolvable Puzzle Error", MB_ICONWARNING);
+							MessageBox(NULL, L"This puzzle is impossible to solve via brute-force.", L"Unsolvable Puzzle Error", MB_ICONWARNING);
 						}
 					}
-					else
+					else if (status == 1001)
 					{
-						MessageBox(NULL, L"Error: Input puzzle is in invalid. There is a duplicate number in a row/col/box.", L"Invalid Input Error", MB_ICONWARNING);
+						MessageBox(NULL, L"One of the inputs is less than 0 or greater than 9.", L"Range Error", MB_ICONWARNING);
 					}
-
-
+					else if (status == 1002)
+					{
+						MessageBox(NULL, L"There is a duplicate number inside a sub-square.", L"Cube Duplicate Error", MB_ICONWARNING);
+					}
+					else if (status == 1003)
+					{
+						MessageBox(NULL, L"There is a duplicate number in a row or column.", L"Line Duplicate Error", MB_ICONWARNING);
+					}
 				}
+
 				if (ImGui::Button("Output to console", ImVec2(1165, 25)))
 				{
 					openConsole();

@@ -370,7 +370,7 @@ std::vector<int> Solver::getCubeValues(const int cubeRegionNumber, int p[9][9])
 }
 
 
-bool Solver::precheckInput(int in[9][9])
+int Solver::precheckInput(int in[9][9])
 {
 	for (int a = 0; a < 9; a++)
 	{
@@ -379,15 +379,14 @@ bool Solver::precheckInput(int in[9][9])
 			if (in[a][b] == 0)
 				continue;
 			if (in[a][b] < 0 || in[a][b] > 9)
-				return false;
+				return 1001;
 			if (!preCheckCube(a, b, in))
-				return false;
+				return 1002;
 			if (!preCheckCross(a, b, in))
-				return false;
-
+				return 1003;
 		}
 	}
-	return true;
+	return 1;
 }
 
 
@@ -404,7 +403,6 @@ bool Solver::preCheckCube(const int row, const int col, int p[9][9])
 			if ((vec.at(x) == 0) || (vec.at(y) == 0)) continue;
 			else if (vec.at(x) == vec.at(y))
 				return false;
-		
 		}
 	}
 	return true;
